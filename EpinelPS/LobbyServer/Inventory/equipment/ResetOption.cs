@@ -15,12 +15,21 @@ public class ResetOption : LobbyMessage
 
         ResAwakeningResetOption response = new();
 
-        EquipmentAwakeningData? awakening = user.EquipmentAwakenings.FirstOrDefault(x => x.Isn == req.Isn);
+        // Base lock state on the confirmed (non-preview) entry, consistent with UpgradeOption
+        EquipmentAwakeningData? awakening = user.EquipmentAwakenings.FirstOrDefault(x => x.Isn == req.Isn && !x.IsNewData)
+                                            ?? user.EquipmentAwakenings.FirstOrDefault(x => x.Isn == req.Isn);
         if (awakening == null)
         {
             await WriteDataAsync(response);
             return;
         }
+
+        // Apply lock reserve requests sent by the client (Slot1/Slot2/Slot3).
+        // proto3 never serializes default values, so NoReserve (0) is indistinguishable
+        // from "field not sent" — it can only mean "no lock requested for this slot".
+        // Cancelling a lock is done via the dedicated /unlockoption endpoint instead.
+        // Only applying requested locks keeps multiple slots locked at the same time.
+        ApplyLockReserveRequests(awakening.Option, req);
 
         NetEquipmentAwakeningOption resetOption = new();
         Random random = new();
@@ -91,6 +100,14 @@ public class ResetOption : LobbyMessage
             IsNewData = true
         };
 
+        // Remove stale preview entries so only one pending preview exists per equipment.
+        // Without this, consecutive rerolls accumulate IsNewData entries and db.json
+        // shows outdated lock states for the same Isn.
+        foreach (EquipmentAwakeningData stale in user.EquipmentAwakenings.Where(x => x.Isn == req.Isn && x.IsNewData).ToList())
+        {
+            user.EquipmentAwakenings.Remove(stale);
+        }
+
         user.EquipmentAwakenings.Add(newAwakening);
 
         // Add the reset options to the response
@@ -112,6 +129,24 @@ public class ResetOption : LobbyMessage
         await WriteDataAsync(response);
     }
 
+
+    private void ApplyLockReserveRequests(NetEquipmentAwakeningOption option, ReqAwakeningResetOption req)
+    {
+        if (req.Slot1 != AwakeningOptionLockReserveRequest.NoReserve)
+            ApplyLockReserveRequest(option, 1, req.Slot1);
+        if (req.Slot2 != AwakeningOptionLockReserveRequest.NoReserve)
+            ApplyLockReserveRequest(option, 2, req.Slot2);
+        if (req.Slot3 != AwakeningOptionLockReserveRequest.NoReserve)
+            ApplyLockReserveRequest(option, 3, req.Slot3);
+    }
+
+    private void ApplyLockReserveRequest(NetEquipmentAwakeningOption option, int slot, AwakeningOptionLockReserveRequest reserve)
+    {
+        bool locked = reserve == AwakeningOptionLockReserveRequest.ReservePermanentLock;
+        bool disposableLocked = reserve == AwakeningOptionLockReserveRequest.ReserveDisposableLock;
+
+        SetOptionForSlot(option, slot, GetOptionIdForSlot(option, slot), locked, disposableLocked);
+    }
 
     private void ProcessOptionSlots(EquipmentAwakeningData awakening, NetEquipmentAwakeningOption resetOption, (int optionId, bool isLocked, bool isDisposableLocked)[] slotLockInfo, List<int> lockedOptionStateEffectIds)
     {

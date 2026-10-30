@@ -30,6 +30,13 @@ public class UpgradeOption : LobbyMessage
             return;
         }
 
+        // Apply lock reserve requests sent by the client (Slot1/Slot2/Slot3).
+        // proto3 never serializes default values, so NoReserve (0) is indistinguishable
+        // from "field not sent" — it can only mean "no lock requested for this slot".
+        // Cancelling a lock is done via the dedicated /unlockoption endpoint instead.
+        // Only applying requested locks keeps multiple slots locked at the same time.
+        ApplyLockReserveRequests(awakening.Option, req);
+
         NetEquipmentAwakeningOption newOption = new();
 
         (int optionId, bool isLocked, bool isDisposableLocked)[] slotLockInfo = new (int optionId, bool isLocked, bool isDisposableLocked)[3];
@@ -88,6 +95,14 @@ public class UpgradeOption : LobbyMessage
             IsNewData = true // newAwakening
         };
 
+        // Remove stale preview entries so only one pending preview exists per equipment.
+        // Without this, consecutive rerolls accumulate IsNewData entries and db.json
+        // shows outdated lock states for the same Isn.
+        foreach (EquipmentAwakeningData stale in user.EquipmentAwakenings.Where(x => x.Isn == req.Isn && x.IsNewData).ToList())
+        {
+            user.EquipmentAwakenings.Remove(stale);
+        }
+
         user.EquipmentAwakenings.Add(newAwakening);
 
         response.ResetOption = new NetEquipmentAwakeningOption()
@@ -107,6 +122,24 @@ public class UpgradeOption : LobbyMessage
         await WriteDataAsync(response);
     }
 
+
+    private void ApplyLockReserveRequests(NetEquipmentAwakeningOption option, ReqAwakeningUpgradeOption req)
+    {
+        if (req.Slot1 != AwakeningOptionLockReserveRequest.NoReserve)
+            ApplyLockReserveRequest(option, 1, req.Slot1);
+        if (req.Slot2 != AwakeningOptionLockReserveRequest.NoReserve)
+            ApplyLockReserveRequest(option, 2, req.Slot2);
+        if (req.Slot3 != AwakeningOptionLockReserveRequest.NoReserve)
+            ApplyLockReserveRequest(option, 3, req.Slot3);
+    }
+
+    private void ApplyLockReserveRequest(NetEquipmentAwakeningOption option, int slot, AwakeningOptionLockReserveRequest reserve)
+    {
+        bool locked = reserve == AwakeningOptionLockReserveRequest.ReservePermanentLock;
+        bool disposableLocked = reserve == AwakeningOptionLockReserveRequest.ReserveDisposableLock;
+
+        SetOptionForSlot(option, slot, GetOptionIdForSlot(option, slot), locked, disposableLocked);
+    }
 
     private void ProcessOptionSlots(EquipmentAwakeningData awakening, NetEquipmentAwakeningOption newOption, (int optionId, bool isLocked, bool isDisposableLocked)[] slotLockInfo)
     {
