@@ -15,6 +15,7 @@ using System.Net;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Runtime.InteropServices;
 
 namespace EpinelPS;
 

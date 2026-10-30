@@ -31,6 +31,8 @@ internal class JsonDb
             text = text.Replace("Char_Customize_Ticket", "CharCustomizeTicket");
             text = text.Replace("Char_Select_01_Ticket", "CharSelect01Ticket");
             text = text.Replace("Char_Select_02_Ticket", "CharSelect02Ticket");
+            text = text.Replace("Friendship_Point", "FriendshipPoint");
+            text = text.Replace("Char_Corporation_Ticket", "CharCorporationTicket");
         }
 
         var j = JsonConvert.DeserializeObject<CoreInfo>(text);
