@@ -45,7 +45,9 @@ public static class EventShopHelper
 
         if (MultipleResponse.Product.AutoCharge.Count > 0) response.Product.AutoCharge.AddRange(MultipleResponse.Product.AutoCharge);
 
-        // user.AddTrigger(Trigger.MainShopBuy, req.Quantity);
+        // Counted trigger used by missions such as "buy N items from the shop".
+        int quantity = req.Quantity > 0 ? req.Quantity : 1;
+        user.AddTrigger(Trigger.MainShopBuy, quantity);
 
         // Save changes to the database
         JsonDb.Save();
@@ -56,10 +58,17 @@ public static class EventShopHelper
         bool isSuccess = ExecuteBuyProduct(user, ref response, [.. req.Products]);
 
         if (!isSuccess) return;
+        int totalQuantity = 0;
         foreach (var item in req.Products)
         {
             AddEventShopBuyCount(user, ref response, req.EventId, item.ShopProductTid, item.Quantity, item.Order);
+            totalQuantity += item.Quantity > 0 ? item.Quantity : 1;
         }
+
+        // Counted trigger used by missions such as "buy N items from the shop".
+        if (totalQuantity > 0)
+            user.AddTrigger(Trigger.MainShopBuy, totalQuantity);
+
         JsonDb.Save();
     }
 

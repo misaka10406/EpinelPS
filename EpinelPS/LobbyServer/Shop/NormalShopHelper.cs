@@ -263,6 +263,11 @@ public static class NormalShopHelper
             purchased.Add(new PurchasedProduct(entry.Product, entry.Request.Order, entry.Request.Quantity, newCount));
         }
 
+        // Counted trigger used by missions such as "buy N items from the shop".
+        int totalQuantity = resolved.Sum(x => x.Request.Quantity);
+        if (totalQuantity > 0)
+            user.AddTrigger(Trigger.MainShopBuy, totalQuantity);
+
         return true;
     }
 

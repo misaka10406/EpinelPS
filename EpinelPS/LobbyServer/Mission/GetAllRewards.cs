@@ -8,6 +8,10 @@ public class GetAllRewards : LobbyMessage
         ReqGetRewardedData req = await ReadData<ReqGetRewardedData>();
         User user = GetUser();
 
+        // Apply a pending daily/weekly rollover first so the completed lists
+        // below describe the current period instead of the previous one.
+        user.ResetDataIfNeeded();
+
         ResGetRewardedData response = new();
 
         response.AchievementIds.Add(user.CompletedAchievements);

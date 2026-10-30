@@ -64,6 +64,9 @@ public class Present : LobbyMessage
             }
         }
 
+        // Counted trigger used by missions such as "give N gifts".
+        user.AddTrigger(Trigger.CharacterAttractivePresent, req.Items.Sum(x => x.Count));
+
         int beforeLv = bondInfo.Lv;
         int beforeExp = bondInfo.Exp;
 

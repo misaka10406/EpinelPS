@@ -28,6 +28,9 @@ public class DoCounsel : LobbyMessage
             currentBondInfo.CounseledCount++;
             if (!currentBondInfo.CounselDialogCompleteIds.Contains(req.CounselTid))
                 currentBondInfo.CounselDialogCompleteIds.Add(req.CounselTid);
+
+            // Counted trigger used by missions such as "counsel N times".
+            user.AddTrigger(Trigger.CharacterCounsel, 1);
             currentBondInfo.CanCounselToday = true; // Always allow counseling
             if (currentBondInfo.Lv < user.GetMaxAttractiveLevel(req.NameCode))
             {

@@ -11,6 +11,10 @@ public class TriggerSync : LobbyMessage
         ReqSyncTrigger req = await ReadData<ReqSyncTrigger>();
         User user = GetUser();
 
+        // Roll the daily/weekly period over before handing out the log the
+        // client uses to compute daily/weekly mission progress.
+        user.ResetDataIfNeeded();
+
         // This request is responsible for fetching a log for
         // daily, weekly, challenge mission completion.
         // This endpoint also returns the entire "history" for the account when 

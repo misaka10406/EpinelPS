@@ -225,7 +225,10 @@ public class ExecGacha : LobbyMessage
 
             response.Gacha.Add(gacha);
 
-            user.AddTrigger(Trigger.GachaCharacter, 0, 0);
+            // Counted trigger: the client sums the values of a trigger type to
+            // evaluate missions such as "perform N recruitments", so each pull
+            // has to contribute 1 instead of 0.
+            user.AddTrigger(Trigger.GachaCharacter, 1, 0);
         }
 
         // A newly obtained character may satisfy a room unlock condition while

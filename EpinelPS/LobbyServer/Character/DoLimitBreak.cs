@@ -59,6 +59,10 @@ public class DoLimitBreak : LobbyMessage
                 user.RemoveItemBySerialNumber(req.Isn, req.Count);
                 response.Items.Add(NetUtils.ToNet(bodyItem));
 
+                // Counted trigger used by missions such as "limit break N times".
+                for (int i = 0; i < req.Count; i++)
+                    user.AddTrigger(Trigger.CharacterGradeUpCount, 1);
+
                 JsonDb.Save();
             }
         }

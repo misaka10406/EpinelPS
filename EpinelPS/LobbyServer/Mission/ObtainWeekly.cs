@@ -12,6 +12,10 @@ public class ObtainWeekly : LobbyMessage
         ReqObtainWeeklyMissionReward req = await ReadData<ReqObtainWeeklyMissionReward>();
         User user = GetUser();
 
+        // A weekly mission claimed after the rollover must not be rejected as
+        // "already completed" because of last week's list.
+        user.ResetDataIfNeeded();
+
         ResObtainWeeklyMissionReward response = new();
 
         List<NetRewardData> rewards = [];

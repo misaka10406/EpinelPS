@@ -139,7 +139,10 @@ public class UsePiece : LobbyMessage
             // eligible openers after the new character and its triggers exist.
             MessengerMessageCreator.CreateAllEligibleOpeners(user);
 
-            user.AddTrigger(Trigger.GachaCharacter, 0, 0);
+            // Counted trigger: the client sums the values of a trigger type to
+            // evaluate missions such as "perform N recruitments", so each pull
+            // has to contribute 1 instead of 0.
+            user.AddTrigger(Trigger.GachaCharacter, 1, 0);
         }
 
         reward.Currency.Add(new NetCurrencyData() { Type = (int)CurrencyType.DissolutionPoint, Value = totalBodyLabels });

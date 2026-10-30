@@ -12,6 +12,10 @@ public class ObtainDaily : LobbyMessage
         ReqObtainDailyMissionReward req = await ReadData<ReqObtainDailyMissionReward>();
         User user = GetUser();
 
+        // A daily mission claimed after the reset must not be rejected as
+        // "already completed" because of yesterday's list.
+        user.ResetDataIfNeeded();
+
         ResObtainDailyMissionReward response = new();
 
         List<NetRewardData> rewards = [];

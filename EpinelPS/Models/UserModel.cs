@@ -642,6 +642,10 @@ public class User
                 }
             };
 
+            // Weekly missions must become claimable again, otherwise the client
+            // is told they are already completed forever after the first week.
+            WeeklyResetableData = new();
+
             // Weekly stamina reset: base 2 + InfraCore bonus (FL[4] = StaminaMaxCount)
             if (infracore != null)
                 Currency[CurrencyType.ContentStamina] = 2 + infracore.FunctionList[4].Function;
@@ -667,8 +671,11 @@ public class User
             };
 
             DispatchResetCount = 0;
-            ResetableData.DispatchCount = GetDispatchCount() + infracore.FunctionList[1].Function;
-            ResetableData.DailyCounselCount[1] = 3 + infracore.FunctionList[2].Function;
+            if (infracore != null)
+            {
+                ResetableData.DispatchCount = GetDispatchCount() + infracore.FunctionList[1].Function;
+                ResetableData.DailyCounselCount[1] = 3 + infracore.FunctionList[2].Function;
+            }
             GachaDailyFreePulls.Clear();
             DailyDiscountUsed = false;
 
