@@ -224,6 +224,7 @@ public class UsersController(ILogger<UsersController> logger, GameContext dbCont
                 IsAdmin = sdkUser.IsAdmin,
                 IsBanned = user.IsBanned,
                 Nickname = gameUser.Nickname ?? "Unknown nickname",
+                UserLevel = user.userPointData.UserLevel,
                 sickpulls = user.sickpulls,
                 Username = sdkUser.Email ?? "Unknown username",
                 ID = user.ID,
@@ -323,6 +324,7 @@ public class UsersController(ILogger<UsersController> logger, GameContext dbCont
 
         user.sickpulls = toSet.sickpulls;
         user.IsBanned = toSet.IsBanned;
+        user.userPointData.UserLevel = toSet.UserLevel;
         JsonDb.Save();
 
         return View(new ModUserModel()
@@ -332,6 +334,7 @@ public class UsersController(ILogger<UsersController> logger, GameContext dbCont
             Nickname = gameUser.Nickname,
             sickpulls = user.sickpulls,
             Username = sdkUser.Email,
+            UserLevel = user.userPointData.UserLevel,
             ID = user.ID
         });
     }

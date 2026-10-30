@@ -7,6 +7,7 @@ public class ModUserModel
 {
     public string Username { get; set; } = "";
     public string Nickname { get; set; } = "";
+    public int UserLevel { get; set; } = 1;
     public string Description { get; set; } = "";
     public bool IsAdmin { get; set; }
     public bool sickpulls { get; set; }

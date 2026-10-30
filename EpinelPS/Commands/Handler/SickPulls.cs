@@ -20,8 +20,11 @@ public class SickPullsHandler(IExecutionContext context) : BaseHandler<SickPulls
             return new HandleResult(false, "No user selected");
 
         var curSickPulls = JsonDb.IsSickPulls(context.SelectedUser);
-        context.SelectedUser.sickpulls = !curSickPulls;
+        var newVal = !curSickPulls;
+        context.SelectedUser.sickpulls = newVal;
         JsonDb.Save();
-        return new HandleResult(true, $"Sick pulls set to {!curSickPulls} for user {context.SelectedUser.Username}");
+        return new HandleResult(true, newVal
+            ? "已开启所有角色拥有相同的抽取概率"
+            : "已关闭所有角色拥有相同的抽取概率");
     }
 }
