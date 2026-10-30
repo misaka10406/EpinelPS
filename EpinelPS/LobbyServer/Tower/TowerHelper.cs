@@ -41,14 +41,23 @@ public class TowerHelper
         if (user.Triggers.Any(x => x.ConditionId == towerId && x.Value == 1))
             throw new Exception("floor already cleared");
 
-        // Sequential progression: previous floor must be cleared (unless this is floor 1)
+        // Sequential progression: previous floor must normally be cleared (unless this is floor 1).
+        // If the client cleared a higher floor without its prerequisites (e.g. skipped ahead),
+        // trust the win result and auto-clear the missing prerequisite floors instead of rejecting.
         if (record.Floor > 1)
         {
             var prev = GameData.Instance.towerTable.Values
                 .FirstOrDefault(t => t.Type == record.Type && t.Floor == record.Floor - 1);
 
             if (prev != null && !user.Triggers.Any(x => x.ConditionId == prev.Id && x.Value == 1))
-                throw new Exception($"previous floor {record.Floor - 1} not cleared");
+            {
+                // Fill the gap: clear every missing floor from current progress+1 up to the requested floor.
+                Console.WriteLine($"Floor {record.Floor - 1} not cleared; auto-clearing prerequisite floors up to {record.Floor}");
+                var gapReward = SkipTowerFloors(user, towerId, out var triggersToAdd);
+                foreach (var (Type, Value, ConditionId) in triggersToAdd)
+                    user.AddTrigger(Type, Value, ConditionId);
+                return gapReward;
+            }
         }
 
         if (!user.TowerProgress.TryGetValue(record.Type, out int value) || value < record.Floor)
