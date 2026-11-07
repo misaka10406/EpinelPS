@@ -148,6 +148,18 @@ public class UsersController(ILogger<UsersController> logger, GameContext dbCont
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpGet("Overloaded/{id}")]
+    public IActionResult Overloaded(ulong id)
+    {
+        var result = Modify(id);
+        if (result is ViewResult view)
+        {
+            return View("Overloaded", view.Model);
+        }
+
+        return result;
+    }
+
     public List<CharacterGearModel> OverloadedGear = [];
     [Route("Modify/{id}")]
     public IActionResult Modify(ulong id)
